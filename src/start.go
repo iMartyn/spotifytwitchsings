@@ -8,6 +8,27 @@ import (
 	"github.com/zmb3/spotify"
 )
 
+func SpotifyGetPlaylistTracks(pid string) []spotify.FullTrack {
+	user := InitAuth()
+	cli := UserData{
+		UserClient: user,
+	}
+	playlistID := spotify.ID(pid)
+	trackListJSON, _ := cli.UserClient.GetPlaylistTracks(playlistID)
+	for _, val := range trackListJSON.Tracks {
+		cli.TrackList = append(cli.TrackList, val.Track)
+	}
+	return cli.TrackList
+}
+
+func SpotifyArtistsAsString(artists []spotify.SimpleArtist) string {
+	ret := ""
+	for _, artist := range(artists) {
+		ret += artist.Name
+	}
+	return ret
+}
+
 // DownloadPlaylist Start initializes complete program
 func DownloadPlaylist(pid string) {
 	user := InitAuth()
@@ -64,9 +85,9 @@ func CompareTrackList(cli UserData) {
 		for _, artistforname := range val.Artists {
 			artists = append(artists, artistforname.Name)
 		}
-		matchKind := SpotifyListContains(val.Name, artists)
+		matchKind, twitchSingsSong := SpotifyListContains(val.Name, artists)
 		if matchKind != MatchNoMatch {
-			fmt.Print(val.Name + " matches ")
+			fmt.Print(twitchSingsSong.Name + " by " + twitchSingsSong.Artist + " matches ")
 			if matchKind == MatchBothNameAndArtist {
 				fmt.Println("both track name and artist")
 			} else {

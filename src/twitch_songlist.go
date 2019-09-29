@@ -149,7 +149,7 @@ func CachedTwitchGetSongs(fromFile bool) (songlist []twitchSingsSong, err error)
 	}
 }
 
-func SpotifyListContains(trackName string, artistName []string) MatchType {
+func SpotifyListContains(trackName string, artistName []string) (MatchType, twitchSingsSong) {
 	artistMatches := false
 	for _, val := range cachedSongList {
 		if val.Name == trackName {
@@ -159,10 +159,10 @@ func SpotifyListContains(trackName string, artistName []string) MatchType {
 				}
 			}
 			if artistMatches {
-				return MatchBothNameAndArtist
+				return MatchBothNameAndArtist, val
 			}
-			return MatchTrackNameOnly
+			return MatchTrackNameOnly, val
 		}
 	}
-	return MatchNoMatch
+	return MatchNoMatch, twitchSingsSong{}
 }

@@ -33,9 +33,19 @@ Pass Either album ID or Playlist ID to start comparing`,
 			}
 		},
 	}
+	var serveCmd = &cobra.Command{
+		Use: "serve",
+		Short: "Serve http requests",
+		Long: "Run the webserver to serve http requests",
+		Run: func(cmd *cobra.Command, args []string) {
+			spotifytwitchsings.HandleHTTP()
+		},
+	}
+	
 
 	rootCmd.Flags().StringVarP(&playlistid, "playlistid", "p", "", "Album ID found on spotify")
 	rootCmd.Flags().StringVarP(&albumid, "albumid", "a", "", "Album ID found on spotify")
+	rootCmd.AddCommand(serveCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
