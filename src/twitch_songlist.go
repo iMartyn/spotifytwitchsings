@@ -13,6 +13,7 @@ const twitchCatalogUrl = "https://sings-extension.twitch.tv/v1/catalog?sortType=
 const cacheTTL = 3600                  // one hour
 var cachedSongList []twitchSingsSong   // runtime global for simple caching
 var cachedSongListUpdateTime time.Time // when to refresh cache
+var cacheFileLocation string
 
 type MatchType int
 
@@ -84,6 +85,32 @@ func TwitchGetSongs() (songlist []twitchSingsSong, err error) {
 	return allSongs, nil
 }
 
+// exists returns whether the given file or directory exists
+func exists(path string) (bool, error) {
+    _, err := os.Stat(path)
+    if err == nil { return true, nil }
+    if os.IsNotExist(err) { return false, nil }
+    return true, err
+}
+
+func getCacheFileLocation() string {
+	finalPath := ""
+	if len(os.Getenv("HOME")) == 0 {
+		finalPath = "/tmp/"
+	} else {
+		result, err := exists(os.Getenv("HOME")+"/.cache")
+		if err != nil {
+			result = false
+		}
+		if result {
+			finalPath = os.Getenv("HOME")+"/.cache"
+		} else {
+			finalPath = "/tmp/"
+		}
+	}
+	return finalPath
+}
+
 func cacheTwitchSongsToFile() error {
 	bytes, err := json.Marshal(cachedSongList)
 	if err != nil {
@@ -91,7 +118,7 @@ func cacheTwitchSongsToFile() error {
 		fmt.Println(err)
 		return err
 	}
-	err = ioutil.WriteFile(os.Getenv("HOME")+"/.cache/twitchsingslist.json", bytes, 0644)
+	err = ioutil.WriteFile(getCacheFileLocation()+"/twitchsingslist.json", bytes, 0644)
 	if err != nil {
 		fmt.Print("Error writing the song list : ")
 		fmt.Println(err)
@@ -101,7 +128,7 @@ func cacheTwitchSongsToFile() error {
 }
 
 func getCachedSongsFromFile() (songlist []twitchSingsSong, err error) {
-	bytes, err := ioutil.ReadFile(os.Getenv("HOME") + "/.cache/twitchsingslist.json")
+	bytes, err := ioutil.ReadFile(getCacheFileLocation() + "/twitchsingslist.json")
 	if err != nil {
 		fmt.Print("Error reading the song list cache : ")
 		fmt.Println(err)
@@ -113,7 +140,7 @@ func getCachedSongsFromFile() (songlist []twitchSingsSong, err error) {
 		fmt.Println(jsonErr)
 		return songlist, jsonErr
 	}
-	f, err := os.OpenFile(os.Getenv("HOME")+"/.cache/twitchsingslist.json", os.O_RDONLY, 0644)
+	f, err := os.OpenFile(getCacheFileLocation() + "/twitchsingslist.json", os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Print("Error opening the song list cache : ")
 		fmt.Println(err)
