@@ -1,4 +1,4 @@
-package spotifydl
+package spotifytwitchsings
 
 import (
 	"context"

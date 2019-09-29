@@ -6,8 +6,6 @@
 
 Spotifydl is a spotify playlist downloader.
 
-It uses youtube as the audio source and Spotify API for playlist details.
-
 ## Installation
 Make sure you have golang installed.
 ```bash

@@ -1,4 +1,4 @@
-package spotifydl
+package spotifytwitchsings
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func DownloadPlaylist(pid string) {
 	for _, val := range trackListJSON.Tracks {
 		cli.TrackList = append(cli.TrackList, val.Track)
 	}
-	DownloadTracklist(cli)
+	CompareTrackList(cli)
 }
 
 // DownloadAlbum Download album according to
@@ -36,13 +36,17 @@ func DownloadAlbum(aid string) {
 			Album:       album.SimpleAlbum,
 		})
 	}
-	DownloadTracklist(cli)
+	CompareTrackList(cli)
 }
 
-// DownloadTracklist Start downloading given list of tracks
-func DownloadTracklist(cli UserData) {
-	fmt.Println("👍 Found", len(cli.TrackList), "tracks")
-	fmt.Println("🎵 Searching and downloading tracks")
+// CompareTrackList Start downloading given list of tracks
+func CompareTrackList(cli UserData) {
+	if len(cachedSongList) <= 0 {
+		fmt.Println("No twitch sings cached yet, reading from disk or remote...")
+		CachedTwitchGetSongs(true)
+	}
+	fmt.Println("Found", len(cli.TrackList), "tracks")
+	fmt.Println("Searching and downloading tracks")
 	uiprogress.Start()
 	bar := uiprogress.AddBar(len(cli.TrackList))
 
@@ -53,22 +57,21 @@ func DownloadTracklist(cli UserData) {
 		}
 		return "   🔍 " + strutil.Resize(cli.TrackList[b.Current()].Name, 30)
 	})
-	for _, val := range cli.TrackList {
-		cli.YoutubeIDList = append(cli.YoutubeIDList, GetYoutubeIds(string(val.Name)+" "+string(val.Artists[0].Name)))
-		bar.Incr()
-	}
-	bar2 := uiprogress.AddBar(len(cli.TrackList))
-	bar2.AppendCompleted()
-	bar2.PrependFunc(func(b *uiprogress.Bar) string {
-		if b.Current() == len(cli.TrackList) {
-			return "   ⬇️  " + strutil.Resize("Download complete", 30)
-		}
-		return "  ⬇️  " + strutil.Resize(fmt.Sprintf("Downloading: %s (%d/%d)", cli.TrackList[b.Current()].Name, b.Current(), len(cli.TrackList)), 30)
-	})
-	for index, track := range cli.YoutubeIDList {
-		ytURL := "https://www.youtube.com/watch?v=" + track
-		Downloader(ytURL, cli.TrackList[index])
-		bar2.Incr()
-	}
 	uiprogress.Stop()
+	fmt.Println("Tracks : ")
+	for _, val := range cli.TrackList {
+		artists := []string {}
+		for _, artistforname := range val.Artists {
+			artists = append(artists, artistforname.Name)
+		}
+		matchKind := SpotifyListContains(val.Name, artists) 
+		if matchKind != MatchNoMatch {
+			fmt.Print(val.Name + " matches ")
+			if matchKind == MatchBothNameAndArtist {
+				fmt.Println("both track name and artist")
+			} else {
+				fmt.Println("just track name")
+			}
+		}
+	}
 }

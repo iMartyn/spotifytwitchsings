@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	spotifydl "github.com/BharatKalluri/spotifydl/src"
+	spotifytwitchsings "github.com/iMartyn/spotifytwitchsings/src"
 	"github.com/spf13/cobra"
 )
 
@@ -13,20 +13,20 @@ func main() {
 	var albumid string
 
 	var rootCmd = &cobra.Command{
-		Use:   "spotifydl",
-		Short: "spotifydl is a awesome music downloader",
-		Long: `Spotifydl lets you download albums and playlists and tags them for you
-Pass Either album ID or Playlist ID to start downloading`,
+		Use:   "spotifytwitchsings",
+		Short: "spotifytwitchsings is a awesome music downloader",
+		Long: `Spotifytwitchsings lets you find which songs are available on twitch sings
+Pass Either album ID or Playlist ID to start comparing`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(playlistid) > 0 && len(albumid) > 0 {
 				fmt.Println("Either album ID or playlist ID")
 				cmd.Help()
 			} else if len(albumid) > 0 {
 				// Download album with the given album ID
-				spotifydl.DownloadAlbum(albumid)
+				spotifytwitchsings.DownloadAlbum(albumid)
 			} else if len(playlistid) > 0 {
 				// Download playlist with the given ID
-				spotifydl.DownloadPlaylist(playlistid)
+				spotifytwitchsings.DownloadPlaylist(playlistid)
 			} else {
 				fmt.Println("Enter valid input.")
 				cmd.Help()
