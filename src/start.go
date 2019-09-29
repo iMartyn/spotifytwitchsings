@@ -60,11 +60,11 @@ func CompareTrackList(cli UserData) {
 	uiprogress.Stop()
 	fmt.Println("Tracks : ")
 	for _, val := range cli.TrackList {
-		artists := []string {}
+		artists := []string{}
 		for _, artistforname := range val.Artists {
 			artists = append(artists, artistforname.Name)
 		}
-		matchKind := SpotifyListContains(val.Name, artists) 
+		matchKind := SpotifyListContains(val.Name, artists)
 		if matchKind != MatchNoMatch {
 			fmt.Print(val.Name + " matches ")
 			if matchKind == MatchBothNameAndArtist {

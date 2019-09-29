@@ -2,19 +2,20 @@ package spotifytwitchsings
 
 import (
 	"encoding/json"
-	"net/http"
-	"io/ioutil"
-	"time"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"time"
 )
 
 const twitchCatalogUrl = "https://sings-extension.twitch.tv/v1/catalog?sortType=artist&cursor="
-const cacheTTL = 3600 // one hour
-var cachedSongList []twitchSingsSong    // runtime global for simple caching
-var cachedSongListUpdateTime time.Time  // when to refresh cache
+const cacheTTL = 3600                  // one hour
+var cachedSongList []twitchSingsSong   // runtime global for simple caching
+var cachedSongListUpdateTime time.Time // when to refresh cache
 
 type MatchType int
+
 const (
 	MatchNoMatch           MatchType = 0
 	MatchTrackNameOnly     MatchType = 1
@@ -24,27 +25,27 @@ const (
 )
 
 type twitchSingsResponse struct {
-	Cursor string  `json:"cursor"`
+	Cursor  string            `json:"cursor"`
 	Results []twitchSingsSong `json:"results"`
 }
 
 type twitchSingsSong struct {
-	Uuid string `json:"uuid"`
-	Name string `json:"name"`
-	Artist string `json:"artist"`
-	Genres []string `json:"genres"`
-	Origin string `json:"origin"`
-	Year int `json:"year"`
-	FirstPublished string `json:"firstPublished"`
-	Languages []string `json:"languages"`
-	HasLeadVocals bool `json:"hasLeadVocals,omitempty"`
+	Uuid           string   `json:"uuid"`
+	Name           string   `json:"name"`
+	Artist         string   `json:"artist"`
+	Genres         []string `json:"genres"`
+	Origin         string   `json:"origin"`
+	Year           int      `json:"year"`
+	FirstPublished string   `json:"firstPublished"`
+	Languages      []string `json:"languages"`
+	HasLeadVocals  bool     `json:"hasLeadVocals,omitempty"`
 }
 
 func getTwitchResponse(cursor string) (twitchSingsResponse, error) {
 	response := twitchSingsResponse{}
-	
-	twitchClient := http.Client{Timeout : time.Second * 2}
-	req, err := http.NewRequest(http.MethodGet, twitchCatalogUrl + cursor, nil)
+
+	twitchClient := http.Client{Timeout: time.Second * 2}
+	req, err := http.NewRequest(http.MethodGet, twitchCatalogUrl+cursor, nil)
 	if err != nil {
 		return response, err
 	}
@@ -76,7 +77,7 @@ func TwitchGetSongs() (songlist []twitchSingsSong, err error) {
 		if err != nil {
 			return songlist, err
 		}
-		allSongs = append(allSongs,response.Results...)
+		allSongs = append(allSongs, response.Results...)
 		songCount = len(response.Results)
 		cursor = response.Cursor
 	}
@@ -90,7 +91,7 @@ func cacheTwitchSongsToFile() error {
 		fmt.Println(err)
 		return err
 	}
-	err = ioutil.WriteFile(os.Getenv("HOME")+"/.cache/twitchsingslist.json",bytes,0644)
+	err = ioutil.WriteFile(os.Getenv("HOME")+"/.cache/twitchsingslist.json", bytes, 0644)
 	if err != nil {
 		fmt.Print("Error writing the song list : ")
 		fmt.Println(err)
@@ -100,7 +101,7 @@ func cacheTwitchSongsToFile() error {
 }
 
 func getCachedSongsFromFile() (songlist []twitchSingsSong, err error) {
-	bytes, err := ioutil.ReadFile(os.Getenv("HOME")+"/.cache/twitchsingslist.json")
+	bytes, err := ioutil.ReadFile(os.Getenv("HOME") + "/.cache/twitchsingslist.json")
 	if err != nil {
 		fmt.Print("Error reading the song list cache : ")
 		fmt.Println(err)
@@ -150,9 +151,9 @@ func CachedTwitchGetSongs(fromFile bool) (songlist []twitchSingsSong, err error)
 
 func SpotifyListContains(trackName string, artistName []string) MatchType {
 	artistMatches := false
-	for _, val := range(cachedSongList) {
+	for _, val := range cachedSongList {
 		if val.Name == trackName {
-			for _, artist := range (artistName) {
+			for _, artist := range artistName {
 				if val.Artist == artist {
 					artistMatches = true
 				}
