@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"html"
 	"time"
-	"strings"
+	"strconv"
 )
 
 func sendHTMLPreambleAndHead(writer http.ResponseWriter) {
@@ -284,15 +284,15 @@ func PlaylistHandler(response http.ResponseWriter, request *http.Request) {
 		MatchKind     MatchType
 	}
 	listItems := []listItem{}
-	path := request.URL.Path
-	listid := strings.Split(path,"/")[2]
+	vars := mux.Vars(request)
 	if len(cachedSongList) <= 0 {
 		fmt.Println("No twitch sings cached yet, reading from disk or remote...")
 		CachedTwitchGetSongs(true)
 	} else {
 		CachedTwitchGetSongs(false)
 	}
-	playlistTracks := SpotifyGetPlaylistTracks(listid)
+	playlistTracks, playlistInfo := SpotifyGetPlaylistTracks(vars["playlist"])
+	foundCount := 0
 	for _,spotifySong := range(playlistTracks) {
 		item := listItem{}
 		item.TrackName = spotifySong.Name
@@ -305,6 +305,7 @@ func PlaylistHandler(response http.ResponseWriter, request *http.Request) {
 		item.MatchKind = ret
 		if ret != MatchNoMatch {
 			item.TwitchArtist = twitchSong.Artist
+			foundCount += 1
 		}
 		listItems = append(listItems, item)
 	}
@@ -312,8 +313,9 @@ func PlaylistHandler(response http.ResponseWriter, request *http.Request) {
 	sendBodyAndHeader(response)
 	fmt.Fprint(response,
 `<main role="main" class="inner cover">
-	<h1 class="cover-heading">Songs in your playlist : </h1>
-	<div align="right"><a href="#" id="showhidebutton" onclick="javascript:toggleUnfound()">Toggle unmatched songs</a></div>
+	<h1 class="cover-heading">Songs in your playlist "`+playlistInfo.Name+`": </h1>
+	<div align="left" style="width: 74%; display: inline-block; padding-left: 40px;">`+strconv.Itoa(playlistInfo.TrackCount)+` tracks, `+strconv.Itoa(foundCount)+` (possibly) in Twitch sings catalog of `+strconv.Itoa(len(cachedSongList))+`!</div>
+	<div align="right" style="width: 24%; display: inline-block;"><a href="#" id="showhidebutton" onclick="javascript:toggleUnfound()">Toggle unmatched songs</a></div>
 	<ul>
 `)
 	for _,item := range(listItems) {
@@ -354,9 +356,11 @@ func AlbumHandler(response http.ResponseWriter, request *http.Request) {
 func HandleHTTP() {
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
-    r.HandleFunc("/", HomeHandler)
-    r.HandleFunc("/cover.css", CSSHandler)
-    r.HandleFunc(`/playlist/{playlist:[0-9a-zA-Z]{22}}`, PlaylistHandler)
+	r.HandleFunc("/", HomeHandler)
+	r.HandleFunc("/cover.css", CSSHandler)
+	r.HandleFunc(`/playlist/{playlist:[0-9a-zA-Z]{22}}`, PlaylistHandler)
+	r.HandleFunc(`/playlist/spotify:playlist:{playlist:[0-9a-zA-Z]{22}}`, PlaylistHandler)
+	r.HandleFunc(`/playlist/https://open.spotify.com/playlist/{playlist:[0-9a-zA-Z]{22}}?{.*}`, PlaylistHandler)
 	r.HandleFunc("/album/{album:[0-9a-zA-Z]{22}}", AlbumHandler)
 	http.Handle("/", r)
 	srv := &http.Server {

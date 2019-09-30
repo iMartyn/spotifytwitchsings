@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/zmb3/spotify"
+	"github.com/chrisvdg/spotify"
 	"golang.org/x/oauth2/clientcredentials"
 )
 

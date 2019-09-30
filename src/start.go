@@ -5,20 +5,29 @@ import (
 
 	"github.com/gosuri/uiprogress"
 	"github.com/gosuri/uiprogress/util/strutil"
-	"github.com/zmb3/spotify"
+	"github.com/chrisvdg/spotify"
 )
 
-func SpotifyGetPlaylistTracks(pid string) []spotify.FullTrack {
+type SpotifyPlaylistInfo struct {
+	Name  string
+	TrackCount int
+}
+
+func SpotifyGetPlaylistTracks(pid string) (tracks []spotify.FullTrack, info SpotifyPlaylistInfo) {
 	user := InitAuth()
+	user.AutoRetry = true
 	cli := UserData{
 		UserClient: user,
 	}
 	playlistID := spotify.ID(pid)
-	trackListJSON, _ := cli.UserClient.GetPlaylistTracks(playlistID)
-	for _, val := range trackListJSON.Tracks {
+	trackListJSON, _ := cli.UserClient.GetPlaylistTracksAll(playlistID)
+	for _, val := range trackListJSON {
 		cli.TrackList = append(cli.TrackList, val.Track)
 	}
-	return cli.TrackList
+	fullPlaylist, _ := cli.UserClient.GetPlaylist(playlistID)
+    info.Name = fullPlaylist.Name
+	info.TrackCount = len(cli.TrackList)
+	return cli.TrackList, info
 }
 
 func SpotifyArtistsAsString(artists []spotify.SimpleArtist) string {
