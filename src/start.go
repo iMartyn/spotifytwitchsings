@@ -30,6 +30,25 @@ func SpotifyGetPlaylistTracks(pid string) (tracks []spotify.FullTrack, info Spot
 	return cli.TrackList, info
 }
 
+func SpotifyGetAlbumTracks(aid string) (tracks []spotify.FullTrack, info spotify.FullAlbum) {
+	user := InitAuth()
+	user.AutoRetry = true
+	cli := UserData{
+		UserClient: user,
+	}
+	albumID := spotify.ID(aid)
+	trackListJSON, _ := cli.UserClient.GetAlbumTracksAll(albumID)
+	for _, val := range trackListJSON {
+		full, err := cli.UserClient.GetTrack(val.ID)
+		if err == nil {
+			cli.TrackList = append(cli.TrackList, *full)
+		}
+	}
+	fullPlaylist, _ := cli.UserClient.GetAlbum(albumID)
+    info.Name = fullPlaylist.Name
+	return cli.TrackList, info
+}
+
 func SpotifyArtistsAsString(artists []spotify.SimpleArtist) string {
 	ret := ""
 	for _, artist := range(artists) {
